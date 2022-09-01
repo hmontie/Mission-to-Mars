@@ -18,6 +18,7 @@ def scrap_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemisphere": hemispheres(browser),
         "last_modified": dt.datetime.now()
     }
     
@@ -80,7 +81,7 @@ def featured_image(browser):
     # Add try/except for error handling
     try:
     # Find the relative image url
-    img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
+        img_url_rel = img_soup.find('img', class_='fancybox-image').get('src')
     
     except AttributeError:
         return None
@@ -111,3 +112,45 @@ if __name__ == "__main__":
 
     # If running as script, print scraped data
     print(scrape_all()) 
+
+# Challenge
+def hemispheres(browser):
+    url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(url)
+
+    hemisphere_image_urls = []
+
+    # First get the list of all hemisphers
+    links = browser.find_by_css('a.product-item h3')
+
+    # Next loop through those links click the link find the sample anchor return href
+    for index in range(len(links)):
+
+    # We have to find the elements on each loop to avoid a state element exception
+    browser.find_by_css('a.product-item h3')[index].click()
+    hemisphere_data = scrape_hemisphere(browser.html)
+    
+    hemisphere_image_urls.append(hemisphere_data)
+    
+    # Finally we navigate backwards
+    browser.back()
+    return hemisphere_image_urls
+
+def scrape_hemisphere(html_text):
+    # parse html text
+    hemi_soup = soup(html_text, "html.parser")
+
+    try:
+        title_element = hemi_soup.fiond("h2", class_="title").get_text() 
+        sample_element = hemi_soup.find("a", text="Sample").get("href")
+    except AttributeError:
+        tittle_element = None
+        sample_element = None
+    hemispheres_dictionary = {
+        "title": title_element,
+        "img_url": sample_element
+    }
+    return hemispheres_dictionary
+
+if __name__ == "__main__":
+    print(scrape_all())
